@@ -82,297 +82,409 @@ When we go through each column, then move across to the next column, and continu
 
 While you can decide to go through forwards or backwards, all traversals are going to fall into one of these two forms, as they will have to either group the rows or group the columns.
 
+---
 
+## Traversing 2D Arrays with `for` Loops
 
+With our approaches in tow, how do we actually traverse a 2D array? It all comes down to our two dimensions. With one dimension, we needed one loop to appropriately traverse the index values. With two dimensions, we will need two loops to appropriately traverse the row index with one loop and traverse the column index with the other.
 
+To start this, let's look at a row-major order traversal, which is the more standard traversal of the two types. Let's look at the diagram again and focus more on the indices:
 
+```
+|-------|----------|----------|----------|----------|----------|
+|       | Column 0 | Column 1 | Column 2 | Column 3 | Column 4 |
+|-------|----------|----------|----------|----------|----------|
+| Row 0 |    0     |    1     |    2     |    3     |    4     |
+|-------|----------|----------|----------|----------|----------|
+| Row 1 |    5     |    6     |    7     |    8     |    9     |
+|-------|----------|----------|----------|----------|----------|
+| Row 2 |    10    |    11    |    12    |    13    |    14    |
+|-------|----------|----------|----------|----------|----------|
+| Row 3 |    15    |    16    |    17    |    18    |    19    |
+|-------|----------|----------|----------|----------|----------|
+| Row 4 |    20    |    21    |    22    |    23    |    24    |
+|-------|----------|----------|----------|----------|----------|
+```
 
+Our traversal needs to go across each row, then move to a new row each time. Notice the row and column indices for the values we need to traverse across:
 
-The basic idea here is that instead of addressing something by a single index (1 dimensional), we could address it using a value for its row and a value for its column, which is essentially now two indices (2 dimensional).
+```
+   Row Index:   0   0   0   0   0   1   1   1   1   1   2
+Column Index:   0   1   2   3   4   0   1   2   3   4   0
+       Value:   0   1   2   3   4   5   6   7   8   9   10
+```
 
-For example, I could tell you to look for the value in column `3` and row `2`, which for the table above is the value `5`.
+Using this as a guide, we need to pick a row index, and hold it constant while we iterate through the column indices, then move onto a new row index and restart our column indices and go again.
 
-Notice that no two "cells" of the table will have exactly the same identifier. Telling someone to look at column `1` and row `4` (the value `10`) is different from telling them to look at column `4` and row `1` (the value `13`). While both addresses use the values `4` and `1`, which one is the row and which one is the column is important information.
+Since the row indices need to be held constant while we iterate over the column, the rows should be handled by the outer loop. Since the column indices are iterated for each row, the columns should be handled by the inner loop.
+
+Essentially in our traversal, the outer loop is going to select a row, and the inner loop is going to go through each column for that row, then repeat for the next row and so on.
+
+That means our outer loop has to go through all of the rows based on their indices. The first row index will always be `0`, but the last row index can change depending on how big our 2D array is. This is where our work with `length` from Unit 8 Section 1 comes into play. We discussed then that asking a 2D array for its length will provide us with the number of rows (or 1D arrays) in the 2D array.
+
+Here is our basic setup for the outer loop with a 2D array `arr` then: `for (int i = 0; i < arr.length; i++)`
+
+Now for the columns. The inner loop has to go through all of the columns based on their indices. The first column index will always be `0`, but the last column index can change depending on how big our 2D array is. This is where our work with `length` from Unit 8 Section 1 comes into play again. We discussed then that to get the number of columns in a 2D array, we need to ask one of it's 1D arrays for its length. Fortunately, since we are in the inner loop, our outer loop will have selected a row (at index `i`) for us to look at, which is a 1D array.
+
+Here is our basic setup for the inner loop with a 2D array `arr` then: `for (int j = 0; j < arr[i].length; j++)`
+
+`arr[i].length` will get the 1D array located at row index `i`, and ask for its `length`, which for us represents the number of columns.
+
+With these two loops in place, we now have variables `i` and `j` to represent row index and column index respectively. This means that inside of those two loops, we can access the element at row `i` and column `j` to accomplish the purpose of our traversal (which could be to print, to evaluate, etc.).
+
+Here is what this looks like all put together from the `Notes2DTraverse1.java` file:
+
+```java
+int[][] arr = new int[][] {{0, 1, 2, 3, 4},
+                           {5, 6, 7, 8, 9},
+                           {10, 11, 12, 13, 14},
+                           {15, 16, 17, 18, 19},
+                           {20, 21, 22, 23, 24}};
+for (int i = 0; i < arr.length; i++) {
+    for (int j = 0; j < arr[i].length; j++) {
+        System.out.println("Row: " + i + ", Column: " + j + ", Value: " + arr[i][j]);
+    }
+}
+```
+
+Notice that the 2D array `arr` is filled in with the values from our table above, so we can tell that our program works correctly if the printed value perfectly counts up.
+
+With this example, we will be able to see the row index held constant while all columns are accessed, then move onto the next row and so on.
+
+As mentioned earlier, row-major order is the typical/preferred way to traverse a 2D array, but some problems might require you to go in column-major order. This follows much the same setup as before, but now our outer loop will have to go through the columns, and our inner loop will have to go through rows.
+
+If our outer loop is going through columns, we need to be able to tell how many columns there are. With row-major order, columns were easier as the inner loop because we had access to an index `i` to get a row that we could get the `length` of. This time though, columns are the outer loop so we don't have that luxury.
+
+Our solution then is built on a very important premise: rectangular arrays. We are assuming in this course that our 2D arrays are rectangular, that is, all rows have the same number of columns. This is not a given in Java, as we can make non-rectangular or jagged 2D arrays, but we will not be worrying about them here.
+
+Since our 2D arrays are rectangular, every row has the same `length`, so if we just ask the first row for its `length`, we can assume that it will work for all the other rows as well.
+
+Here is our basic setup for the outer loop with a 2D array `arr` then: `for (int i = 0; i < arr[0].length; i++)`
+
+Note that the only change from row-major order is that it is now `arr[0].length` instead of `arr.length` to track column indices instead of row indices.
+
+The inner loop goes through an opposite change. It now needs to know the number of rows instead of number of columns, so it utilizes `arr.length`.
+
+Here is our basic setup for the inner loop with a 2D array `arr` then: `for (int j = 0; j < arr.length; j++)`
+
+With the loops set up, there is one final note we need to be aware of. When we access an element, we provide the row index and column index, in that order. Our row index is now represented by the inner loop, which utilizes `j`, and the column index is now represented by the outer loop, which utilizes `i`. So our access is now at row `j` and column `i`, which feels backwards, but will get us the column-major order we want.
+
+Here is what this looks like all put together from the `Notes2DTraverse2.java` file:
+
+```java
+int[][] arr = new int[][] {{0, 5, 10, 15, 20},
+                           {1, 6, 11, 16, 21},
+                           {2, 7, 12, 17, 22},
+                           {3, 8, 13, 18, 23},
+                           {4, 9, 14, 19, 24}};
+for (int i = 0; i < arr[0].length; i++) {
+    for (int j = 0; j < arr.length; j++) {
+        System.out.println("Row: " + j + ", Column: " + i + ", Value: " + arr[j][i]);
+    }
+}
+```
+
+Notice that this time the 2D array `arr` is filled in with the values from column-major order table, so we can tell that our program works correctly if the printed value perfectly counts up.
+
+With this example, we will be able to see the column index held constant while all rows are accessed, then move onto the next column and so on.
 
 ---
 
-## 2 Dimensions in Java
+## Traversing 2D Arrays with `for-each` Loops
 
-So how do we store a table of values in Java? As you might be able to tell from the name of the unit and section, we still use arrays to do this. How can arrays store things in both 1 dimension and 2 dimensions?
+Just like we could use `for-each` loops to traverse 1D arrays, we can also use them to traverse 2D arrays. The same drawbacks are present: we won't have the indices (row or column) and we can't modify values. Regardless, some problems don't require that and this could be a simpler way to traverse.
 
-The basic answer is that an array only ever stores things in 1 dimension, so we get really clever to solve this problem.
+A new drawback is present though: we can only do row-major order traversals. If for any reason a problem requires column-major order traversal, we have to use a traditional `for` loop. Why can't we do column-major order with `for-each` loops?
 
-Arrays can store any type of information: primitive types or objects. This is important because arrays at their core are also objects. The clever solution then is to make an array that stores other arrays. Does this work?
+It all comes down to how `for-each` loops operate. A `for-each` loop takes each object from an array and copies it. Since a 2D array is just a 1D array of 1D arrays, a `for-each` loop will start by just taking a 1D array object (a row) from the 2D array) for each iteration.
 
-Thinking back to our table above, we could separate a table into being a set of rows. We could think of each row itself as an array. Here's the same information as the table above written as multiple arrays:
+Due to this behavior, we will still require two loops like we had above, even if both are now `for-each` loops.
 
-```
-Array 0 (from Row 0)
-Index:  0   1   2   3   4
-Value:  3   7   2   11  4
+The outer loop will access each row, and the inner loop will access the values of that row (going through its columns).
 
-Array 1 (from Row 1)
-Index:  0   1   2   3   4
-Value:  1   5   8   15  13
+Since a row of a 2D array is a 1D array, this shows up in our notation for our `for-each` loop, since we need to specify the type of information being stored.
 
-Array 2 (from Row 2)
-Index:  0   1   2   3   4
-Value:  1   2   6   5   12
+For a 2D array of `int` values called `arr`, it would look like this: `for (int[] row : arr)`
 
-Array 3 (from Row 3)
-Index:  0   1   2   3   4
-Value:  2   5   7   23  9
+The type is `int[]` because one row of a 2D array of `int` values is a 1D `int` array. From then on, `row` represents a 1D array of the values of the current row.
 
-Array 4 (from Row 4)
-Index:  0   1   2   3   4
-Value:  12  10  3   5   3
-```
+Now the inner loop needs to go through all of the values stored in the 1D array `row`, which looks exactly like our traditional `for-each` loops with arrays, as each value in this 1D array is an `int` value.
 
-These 5 arrays contain all of the same information as the table above. You would just have to know which array to look at (equivalent to our row numbers), and which index to look at in that array (equivalent to our column numbers).
+For a 1D array of `int` values called `row`, it would look like this: `for (int value : row)`
 
-We can bring this back into our table form to see the interaction of storing multiple arrays:
+So inside of the inner loop, the variable `value` will end up representing a copy of every value in the 2D array in row-major order.
 
-```
-|---------|---------|---------|---------|---------|---------|
-|         | Index 0 | Index 1 | Index 2 | Index 3 | Index 4 |
-|---------|---------|---------|---------|---------|---------|
-| Array 0 |    3    |    7    |    2    |    11   |    4    |
-|---------|---------|---------|---------|---------|---------|
-| Array 1 |    1    |    5    |    8    |    15   |    13   |
-|---------|---------|---------|---------|---------|---------|
-| Array 2 |    1    |    2    |    6    |    5    |    12   |
-|---------|---------|---------|---------|---------|---------|
-| Array 3 |    2    |    5    |    7    |    23   |    9    |
-|---------|---------|---------|---------|---------|---------|
-| Array 4 |    12   |    10   |    3    |    5    |    3    |
-|---------|---------|---------|---------|---------|---------|
+Here is what this looks like all put together from the `Notes2DTraverse3.java` file:
+
+```java
+int[][] arr = new int[][] {{0, 1, 2, 3, 4},
+                           {5, 6, 7, 8, 9},
+                           {10, 11, 12, 13, 14},
+                           {15, 16, 17, 18, 19},
+                           {20, 21, 22, 23, 24}};
+for (int[] row : arr) {
+    for (int value : row) {
+        System.out.println("Value: " + value);
+    }
+}
 ```
 
-Each of our arrays is assigned a number just like our row numbers before, and each column functions as our more traditional index inside of any of the given arrays/rows. This is what a 2-dimensional or **2D array** looks like, it is a set of arrays that can be lined up together.
+This obviously is much more concise than our traditional `for` loops, at the cost of the drawbacks of a `for-each` loop. If those drawbacks don't affect what we were trying to do (i.e. just printing in this case), it can simplify a problem a lot.
 
-It is important to note that the example above specifically has a set of arrays that are all the same size. This is not a requirement in Java, but is a standard we will stick to through this course, referred to as **rectangular arrays**.
+Notice that the 2D array `arr` is filled in with the values from the row-major order table, so we can tell that our program works correctly if the printed value perfectly counts up.
 
 ---
 
-## Implementing 2D Arrays
+## Searching in a 2D Array
 
-The notation for 2D arrays is built on the notation for our regular 1D arrays (since it is just an array storing other arrays).
+In Unit 7 Section 5 we discussed the general process for a **linear search** in an `ArrayList` (which for our use here can be considered equivalent to a 1D array). Essentially, we just go through the values in order and check if each one matches what we are looking for. If we ever find the value we are looking for, we can state the index of that value.
 
-### Declaring and Initializing a Default 2D Array
-
-Here is a quick example of how to initialize an array variable for default `int` values from the `NotesDefaultInitialization1.java` file:
+Here is what this would look like with a 1D array from the `NotesSearch1.java` file:
 
 ```java
-int[] nums = new int[5];
+int[] arr = new int[] {2, 5, 6, 3, 8, 7, 6, 4, 3};
+int target = 3;
+for (int i = 0; i < arr.length; i++) {
+    if (arr[i] == target) {
+        System.out.println(target + " was found at index " + i);
+    }
+}
 ```
 
-This creates an `int` array that can store 5 `int` values and assigns it to the variable `nums`. When we create an array like this, it automatically fills it with default values for the type it contains (for `int`, the default is `0`).
+This produces the following output:
 
-This uses the important square bracket notation, where you write the type, and when followed by square brackets indicates an array of that type.
+```
+3 was found at index 3
+3 was found at index 8
+```
 
-If we want to store an array of arrays, then we need to establish that our type is an array, followed by square brackets. Since `int[]` represents an array of `int` values, this means that `int[][]` represents an array of `int` arrays, essentially representing a table.
+This implementation just prints out the index whenever it finds the value (and therefore can find the value more than once if it is present more than once). We are not going to worry about how we would implement a method that returns the index instead of printing it for the sake of our 2D array case.
 
-Using this notation, we can now initialize a 2D array variable for `int` values from the `NotesDefaultInitialization2.java` file:
+Notice that we could not have used a `for-each` loop here, as we need to know the index to answer the question.
+
+What would have to change about this to work for a 2D array `arr` instead of a 1D array? At the end of the day, we just need to go through every value. Since it doesn't matter to this problem, we would lean towards row-major order, being the more standard of the two orders.
+
+If we just change the traversal, otherwise this structure should otherwise work, we just have to put our `if` statement inside of the inner loop.
+
+Here is what this would look like with a 2D array from the `NotesSearch2.java` file:
 
 ```java
-int[][] nums = new int[5][5];
+int[][] arr = new int[][] {{3, 7, 2, 11, 4},
+                           {1, 5, 8, 15, 13},
+                           {1, 2, 6, 5, 12},
+                           {2, 5, 7, 23, 9},
+                           {12, 10, 3, 5, 3}};
+int target = 3;
+for (int i = 0; i < arr.length; i++) {
+    for (int j = 0; j < arr[i].length; j++) {
+        if (arr[i][j] == target) {
+            System.out.println(target + " was found at row index " + i + " and column index " + j);
+        }
+    }
+}
 ```
 
-This creates an array of 5 `int` arrays that can each store `5` values. For the purposes of this course, we will always think of the first number as the number of arrays, and the second number as the number of elements in each of those arrays.
-
-Despite it now being 2D, it still fills all of the elements in all of the arrays with the default type (again, for `int` values, this is `0`).
-
-### Declaring and Initializing a 2D Array with Values
-
-Here is a quick example of how to initialize an array variable with `int` values from the `NotesInitialization1.java` file:
-
-```java
-int[] nums = new int[] {3, 7, 2, 11, 4};
-```
-
-The change from default arrays is that instead of providing an `int` value in the square brackets for the length, we just provide an **initializer list** that uses curly braces, and commas between each value.
-
-We can provide initializer lists for 2D arrays as well, with similar notation. Since we are making an array of arrays, where we would have written a number before, we write a whole 1D array initializer list.
-
-Continuing our sample 2D array from above, this is what the 1D array initializer lists look like for each of the rows.
+This produces the following output:
 
 ```
-{3, 7, 2, 11, 4}
-{1, 5, 8, 15, 13}
-{1, 2, 6, 5, 12}
-{2, 5, 7, 23, 9}
-{12, 10, 3, 5, 3}
+3 was found at row index 0 and column index 0
+3 was found at row index 4 and column index 2
+3 was found at row index 4 and column index 4
 ```
 
-With these in hand, our 2D array initializer list would look like this:
-
-```
-{{3, 7, 2, 11, 4}, {1, 5, 8, 15, 13}, {1, 2, 6, 5, 12}, {2, 5, 7, 23, 9}, {12, 10, 3, 5, 3}}
-```
-
-Notice that we end up with multiple curly braces, and each of our 1D initializer lists are separated by commas themselves.
-
-Using this notation, we can now initialize a 2D array variable with specific `int` values from the `NotesInitialization2.java` file:
-
-```java
-int[][] nums = new int[][] {{3, 7, 2, 11, 4}, {1, 5, 8, 15, 13}, {1, 2, 6, 5, 12}, {2, 5, 7, 23, 9}, {12, 10, 3, 5, 3}};
-```
-
-Just like our default example, this creates a 5 row, 5 column 2D array, but this time the values are specifically set. The values in the first row would be 3, 7, 2, 11, and 4.
+This is considered a basic linear search for a 2D array because it looks through every value (in some order) to find the target.
 
 ---
 
-## Using 2D Arrays
+## 2D Array Algorithms
 
-Just like when creating them, the notation for using (accessing, modifying, etc.) the values for 2D arrays is built on the notation that we used for 1D arrays.
+Just like our modification of a linear search algorithm above, all of our basic algorithms from Unit 6 Section 4 for 1D arrays, can be similarly changed to work for 2D arrays. For the most part, it just requires replacement of the single loop traversal with a double loop traversal.
 
-As discussed above when looking at tables, the primary difference is we now have two "index" values that are needed to get to an element: one for the row and one for the column.
+For each of the algorithms below, the 1D and 2D array versions are shown for comparison.
 
-Here is our sample table again:
+### Minimum
 
-```
-|---------|---------|---------|---------|---------|---------|
-|         | Index 0 | Index 1 | Index 2 | Index 3 | Index 4 |
-|---------|---------|---------|---------|---------|---------|
-| Array 0 |    3    |    7    |    2    |    11   |    4    |
-|---------|---------|---------|---------|---------|---------|
-| Array 1 |    1    |    5    |    8    |    15   |    13   |
-|---------|---------|---------|---------|---------|---------|
-| Array 2 |    1    |    2    |    6    |    5    |    12   |
-|---------|---------|---------|---------|---------|---------|
-| Array 3 |    2    |    5    |    7    |    23   |    9    |
-|---------|---------|---------|---------|---------|---------|
-| Array 4 |    12   |    10   |    3    |    5    |    3    |
-|---------|---------|---------|---------|---------|---------|
-```
-
-To tell someone which element we would like to look at/work with, we need to tell them which 1D array we are looking at (our row), and which index in that 1D array we are looking at (our column).
-
-For example, if I told someone I was looking at row `3` and column `2`, this would represent the value `7`. Again as mentioned above, despite using the same values for the indices, looking at row `2` and column `3` is a different element of the 2D array: this time the value is `5`.
-
-### Accessing Elements
-
-Here is a quick example of how we would access a specific element in a 1D array from the `NotesAccess1.java` file:
+From the `NotesMinimum1.java` file:
 
 ```java
-int[] nums = new int[] {3, 7, 2, 11, 4};
-System.out.println(nums[1]);
-System.out.println(nums[3]);
+public static double findMinimum(double[] arr) {
+    double minimum = arr[0];
+    for (double val : arr) {
+        if (val < minimum) {
+            minimum = val;
+        }
+    }
+    return minimum;
+}
+
+public static double findMinimum(double[][] arr) {
+    double minimum = arr[0][0];
+    for (double[] row : arr) {
+        for (double val : row) {
+            if (val < minimum) {
+                minimum = val;
+            }
+        }
+    }
+    return minimum;
+}
 ```
 
-This sample would print out the values `7` and `11`. By providing the index of the element we want in the square brackets, it accesses and gives us the value stored in that index.
+### Maximum
 
-This is going to be very similar for 2D arrays, except now we have two square brackets and therefore two indices (our row and column that we looked at above). The first square bracket will represent the row index and the second square bracket will represent the column index.
-
-Here is what this would look like for 2D arrays from the `NotesAccess2.java` file:
+From the `NotesMaximum1.java` file:
 
 ```java
-int[][] nums = new int[][] {{3, 7, 2, 11, 4}, {1, 5, 8, 15, 13}, {1, 2, 6, 5, 12}, {2, 5, 7, 23, 9}, {12, 10, 3, 5, 3}};
-System.out.println(nums[3][2]);
-System.out.println(nums[2][3]);
+public static double findMaximum(double[] vals) {
+    double maximum = vals[0];
+    for (double val : vals) {
+        if (val > maximum) {
+            maximum = val;
+        }
+    }
+    return maximum;
+}
+
+public static double findMaximum(double[][] arr) {
+    double maximum = arr[0][0];
+    for (double[] row : arr) {
+        for (double val : row) {
+            if (val > maximum) {
+                maximum = val;
+            }
+        }
+    }
+    return maximum;
+}
 ```
 
-This shows our example earlier was correct by printing `7` first (for row `3` and column `2`), and then `5` (for row `2` and column `3`).
+### Sum
 
-### Modifying Elements
-
-Here is a quick example of how we would modify a specific element in a 1D array from the `NotesAccess1.java` file:
+From the `NotesSum1.java` file:
 
 ```java
-int[] nums = new int[] {3, 7, 2, 11, 4};
-nums[2] = 5;
-System.out.println(nums[2]);
-nums[4] -= 1;
-System.out.println(nums[4]);
-nums[1] *= nums[0];
-System.out.println(nums[1]);
+public static int sumAges(Person[] people) {
+    int sum = 0;
+    for (Person person : people) {
+        sum += person.getAge();
+    }
+    return sum;
+}
+
+public static int sumAges(Person[][] people) {
+    int sum = 0;
+    for (Person[] row : people) {
+        for (Person person : row) {
+            sum += person.getAge();
+        }
+    }
+    return sum;
+}
 ```
 
-When it comes to modifying a 1D array value, we can just use the square bracket and index to get the correct position, and then use assignment (`=`) to change the value:
-- This can be simple like just assigning a new value `5` to index `2` (overwriting the value `2` that had been there). Therefore, the first number it prints is `5`.
-- It can be more complex and modify based on its current value, like substracting `1` from the current value at index `4` (this does `4 - 1` and stores `3` as the result). Therefore, the second number it prints is `3`.
-- The most complex would be modifying based on its current value and the value from other parts of the array, like multiplying the current value at index `1` by the current value at index `0` and saving that result to index `1` (this does `7 * 3` and stores `21` as the result). Therefore, the third number it prints is `21`.
+### Average
 
-Modifying values in a 2D array is fundamentally the same, we just need two square brackets and indices to access the right place to begin with.
-
-Here is what this would look like for 2D arrays from the `NotesAccess2.java` file:
+From the `NotesAverage1.java` file:
 
 ```java
-int[][] nums = new int[][] {{3, 7, 2, 11, 4}, {1, 5, 8, 15, 13}, {1, 2, 6, 5, 12}, {2, 5, 7, 23, 9}, {12, 10, 3, 5, 3}};
-nums[1][4] = 5;
-System.out.println(nums[1][4]);
-nums[3][1] += 6;
-System.out.println(nums[3][1]);
-nums[2][2] /= nums[1][0]; 
-System.out.println(nums[2][2]);
+public static double findAverage(int[] nums) {
+    int sum = 0;
+    for (int num : nums) {
+        sum += num;
+    }
+    return (double) sum / nums.length;
+}
+
+public static double findAverage(int[][] nums) {
+    int sum = 0;
+    for (int[] row : nums) {
+        for (int num : row) {
+            sum += num;
+        }
+    }
+    return (double) sum / (nums.length * nums[0].length);
+}
 ```
 
-Can you predict what happens and what it should print?
-- The first value it prints is `5`. The value at `[1][4]` is `13`, which is overwritten with the value `5`.
-- The second value it prints is `11`. The value at `[3][1]` is `5`, which has `6` added to it to get `11`.
-- The third value it prints is `6`. The value at `[2][2]` is `6`, which is divided by the value at `[1][0]` which is `1`, to get `6` and saves to the position `[2][2]`.
+### An Element with a Property
 
-### Length
-
-1D arrays have a property called `length` that tells us how many elements are stored in the array.
-
-Here is a quick example of how we would get the length of a 1D array from the `NotesLength1.java` file:
+From the `NotesOneElementCondition1.java` file:
 
 ```java
-int[] nums = new int[] {3, 7, 2, 11, 4};
-System.out.println(nums.length);
+public static boolean containsEven(int[] nums) {
+    for (int num : nums) {
+        if (num % 2 == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+public static boolean containsEven(int[][] nums) {
+    for (int[] row : nums) {
+        for (int num : row) {
+            if (num % 2 == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 ```
 
-This prints the value `5`, since there are `5` numbers stored in the array. Remember that the `length` has a specific relationship with our indices, which is that indices go from `0` to `length - 1`. So for this array, the valid indices go from `0` to `5 - 1 = 4`.
+### All Elements with a Property
 
-It would seem intuitive then, that when we ask a 2D array for its length, it tells us how many total values the table stores, but this doesn't work out.
-
-As a quick example from the `NotesLength2.java` file:
+From the `NotesAllElementsCondition1.java` file:
 
 ```java
-int[][] nums = new int[][] {{3, 7, 2, 11, 4}, {1, 5, 8, 15, 13}, {1, 2, 6, 5, 12}, {2, 5, 7, 23, 9}, {12, 10, 3, 5, 3}};
-System.out.println(nums.length);
+public static boolean allNegative(int[] nums) {
+    for (int num : nums) {
+        if (num >= 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+public static boolean allNegative(int[][] nums) {
+    for (int[] row : nums) {
+        for (int num : row) {
+            if (num >= 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 ```
 
-This prints out the value `5`, even though we know that this table stores `25` numbers (`5` rows times `5` columns is `25` cells).
+### Determine the Number of Elements Meeting Criteria
 
-So why is it printing `5`? This comes back to the premise of what 2D arrays are: an array of arrays. When we ask a 2D array for its `length`, it tells us how many things it stores. Since a 2D array is an array that stores many 1D arrays, `length` tells us how many 1D arrays it stores, which in this case is `5`. This, in effect, tells us how many rows our 2D array has.
-
-Well, if our goal is to say how many total elements it stores, then it seems all we need now is to get the number of columns, and then we can multiple rows and columns to get our answers. How do we get the number of columns?
-
-If the length of a 2D array tells us the number of rows/1D arrays, then if we could just get a hold of one of the 1D arrays and ask it for its length, that would be the number of columns.
-
-Oddly enough with 2D arrays, we can use just one square bracket and an index instead of two, and this gives us a whole row of the 2D array, which is just a 1D array. It is important to note that since our 2D arrays are rectangular, it doesn't matter which row we get access to, any row will work. Due to this, we typically just take the first row (index `0`).
-
-Here is what this would look like from the `NotesLength3.java` file:
+From the `NotesNumberCriteria1.java` file:
 
 ```java
-int[][] nums = new int[][] {{3, 7, 2, 11, 4}, {1, 5, 8, 15, 13}, {1, 2, 6, 5, 12}, {2, 5, 7, 23, 9}, {12, 10, 3, 5, 3}};
-System.out.println(nums[0].length);
+public static int howManyOldPeople(Person[] people) {
+    int count = 0;
+    for (Person person : people) {
+        if (person.getAge() > 60) {
+            count++;
+        }
+    }
+    return count;
+}
+
+public static int howManyOldPeople(Person[][] people) {
+    int count = 0;
+    for (Person[] row : people) {
+        for (Person person : row) {
+            if (person.getAge() > 60) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
 ```
-
-This again prints the value `5`, but that's because that is how many values are stored in the first row (the 1D array `{3, 7, 2, 11, 4}`).
-
-So now we can combine these two things to state the number of rows, number of columns, and number of total values that a 2D array can store.
-
-Here is an example of this with a different-sized 2D array from the `NotesLength4.java` file:
-
-```java
-int[][] nums = new int[7][11];
-System.out.println("Number of Rows: " + nums.length);
-System.out.println("Number of Columns: " + nums[0].length);
-System.out.println("Number of Values: " + (nums.length * nums[0].length));
-```
-
-This prints the following result:
-
-```
-Number of Rows: 7
-Number of Columns: 11
-Number of Values: 77
-```
-
-The ability to get the number of rows and columns separately is going to be critical to our work in the next section as we cover traversal of 2D arrays.
 
 ---
 
